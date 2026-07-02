@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telpon Bengkel | Profesional Mobile Mechanic Pontianak</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+    <link rel="shortcut icon" href="images/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="images/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="images/android-chrome-512x512.png">
+    <meta name="theme-color" content="#0f172a">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Leaflet Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        },
+                        dark: '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .hero-gradient {
+            background:
+                radial-gradient(ellipse 70% 50% at 80% 10%, rgba(34, 197, 94, 0.25), transparent 60%),
+                radial-gradient(ellipse 50% 40% at 10% 0%, rgba(34, 197, 94, 0.12), transparent 55%);
+        }
+        @keyframes marquee-scroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+        .marquee-track {
+            animation: marquee-scroll 22s linear infinite;
+        }
+        .marquee-wrap:hover .marquee-track {
+            animation-play-state: paused;
+        }
+        .marquee-mask {
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+        }
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease, opacity 0.3s ease, padding 0.3s ease;
+            opacity: 0;
+        }
+        .faq-item.open .faq-answer {
+            max-height: 400px;
+            opacity: 1;
+        }
+        .faq-item.open .faq-icon {
+            transform: rotate(45deg);
+        }
+        .faq-icon {
+            transition: transform 0.3s ease;
+        }
+
+        /* ── Splash Screen ── */
+        #splash {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #0f172a;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+        #splash.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+        #splash-logo {
+            width: 140px;
+            height: auto;
+            opacity: 0;
+            transform: scale(0.6);
+            animation: splash-logo-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        #splash-brand {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            color: #fff;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: splash-text-in 0.6s 0.35s ease forwards;
+        }
+        #splash-brand span { color: #22c55e; }
+        #splash-loader {
+            margin-top: 32px;
+            width: 120px;
+            height: 4px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 99px;
+            overflow: hidden;
+            position: relative;
+            opacity: 0;
+            animation: splash-text-in 0.6s 0.55s ease forwards;
+        }
+        #splash-loader::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 99px;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                transparent 30%,
+                #22c55e 50%,
+                transparent 70%,
+                transparent 100%
+            );
+            background-size: 200% 100%;
+            animation: splash-shimmer 2s 0.7s ease-in-out infinite;
+        }
+        @keyframes splash-logo-in {
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes splash-text-in {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes splash-shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ── Leaflet Map Attribution ── */
+        .leaflet-control-attribution {
+            font-size: 10px !important;
+            background: rgba(15,23,42,0.8) !important;
+            color: #64748b !important;
+            padding: 2px 6px !important;
+            border-radius: 4px 0 0 0 !important;
+        }
+        .leaflet-control-attribution a {
+            color: #94a3b8 !important;
+        }
+        #map { background: #1e293b; }
+    </style>
+</head>
+<body class="bg-dark text-slate-100 font-sans selection:bg-brand-500 selection:text-white">
+
+    <!-- Splash Screen -->
+    <div id="splash" aria-hidden="true">
+        <img id="splash-logo" src="images/logo.png" alt="Telpon Bengkel">
+        <div id="splash-brand">TELPON<span>BENGKEL</span></div>
+        <div id="splash-loader"></div>
+    </div>
+
+    <nav class="fixed w-full z-50 glass transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+            <a href="#" class="flex items-center gap-2 sm:gap-3">
+                <img src="images/logo.png" alt="Logo Telpon Bengkel" class="h-12 w-12 object-contain">
+                <span class="text-base sm:text-xl font-bold tracking-tight">TELPON<span class="text-brand-500">BENGKEL</span></span>
+            </a>
+            <div class="hidden md:flex gap-8 text-sm font-semibold text-slate-300">
+                <a href="#tentang" class="hover:text-brand-500 transition">Tentang</a>
+                <a href="#layanan" class="hover:text-brand-500 transition">Layanan</a>
+                <a href="#filosofi" class="hover:text-brand-500 transition">Filosofi</a>
+                <a href="#testimoni" class="hover:text-brand-500 transition">Testimoni</a>
+                <a href="#lokasi" class="hover:text-brand-500 transition">Lokasi</a>
+                <a href="#faq" class="hover:text-brand-500 transition">FAQ</a>
+            </div>
+            <a href="https://wa.me/6285828417003?text=Halo%20Telpon%20Bengkel%2C%20saya%20ingin%20memesan%20layanan%20bengkel%20panggilan." target="_blank" rel="noopener noreferrer" class="hidden md:inline-block bg-brand-500 hover:bg-brand-600 text-white px-6 py-2.5 rounded-full font-bold text-sm transition shadow-lg shadow-brand-500/20">
+                Hubungi Kami
+            </a>
+            <button id="menu-btn" type="button" class="md:hidden text-2xl text-white p-2 -mr-2" aria-label="Buka menu" aria-expanded="false" onclick="toggleMobileMenu()">
+                <i class="fa-solid fa-bars" id="menu-icon"></i>
+            </button>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden glass border-t border-white/10 px-6 py-4 space-y-3">
+            <a href="#tentang" onclick="closeMobileMenu()" class="block py-2 text-slate-200 font-semibold hover:text-brand-500 transition">Tentang</a>
+            <a href="#layanan" onclick="closeMobileMenu()" class="block py-2 text-slate-200 font-semibold hover:text-brand-500 transition">Layanan</a>
+            <a href="#filosofi" onclick="closeMobileMenu()" class="block py-2 text-slate-200 font-semibold hover:text-brand-500 transition">Filosofi</a>
+            <a href="#testimoni" onclick="closeMobileMenu()" class="block py-2 text-slate-200 font-semibold hover:text-brand-500 transition">Testimoni</a>
+            <a href="#lokasi" onclick="closeMobileMenu()" class="block py-2 text-slate-200 font-semibold hover:text-brand-500 transition">Lokasi</a>
+            <a href="#faq" onclick="closeMobileMenu()" class="block py-2 text-slate-200 font-semibold hover:text-brand-500 transition">FAQ</a>
+            <a href="https://wa.me/6285828417003?text=Halo%20Telpon%20Bengkel%2C%20saya%20ingin%20memesan%20layanan%20bengkel%20panggilan." target="_blank" rel="noopener noreferrer" onclick="closeMobileMenu()" class="block text-center bg-brand-500 hover:bg-brand-600 text-white px-6 py-3 rounded-xl font-bold text-sm transition mt-2">
+                Hubungi Kami
+            </a>
+            <div class="flex justify-center gap-5 pt-3 border-t border-white/10 mt-3">
+                <a href="https://www.instagram.com/telponbengkel/?hl=en" target="_blank" rel="noopener noreferrer" aria-label="Instagram Telpon Bengkel" class="text-slate-300 hover:text-brand-500 transition text-xl">
+                    <i class="fa-brands fa-instagram"></i>
+                </a>
+                <a href="https://www.facebook.com/Telponbengkel" target="_blank" rel="noopener noreferrer" aria-label="Facebook Telpon Bengkel" class="text-slate-300 hover:text-brand-500 transition text-xl">
+                    <i class="fa-brands fa-facebook"></i>
+                </a>
+                <a href="https://www.tiktok.com/@telponbengkelindonesia" target="_blank" rel="noopener noreferrer" aria-label="TikTok Telpon Bengkel" class="text-slate-300 hover:text-brand-500 transition text-xl">
+                    <i class="fa-brands fa-tiktok"></i>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const btn = document.getElementById('menu-btn');
+            const icon = document.getElementById('menu-icon');
+            const isHidden = menu.classList.contains('hidden');
+            if (isHidden) {
+                menu.classList.remove('hidden');
+                btn.setAttribute('aria-expanded', 'true');
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-xmark');
+            } else {
+                menu.classList.add('hidden');
+                btn.setAttribute('aria-expanded', 'false');
+                icon.classList.remove('fa-xmark');
+                icon.classList.add('fa-bars');
+            }
+        }
+        function closeMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const btn = document.getElementById('menu-btn');
+            const icon = document.getElementById('menu-icon');
+            menu.classList.add('hidden');
+            btn.setAttribute('aria-expanded', 'false');
+            icon.classList.remove('fa-xmark');
+            icon.classList.add('fa-bars');
+        }
+    </script>
+
+    <header class="relative pt-28 sm:pt-32 pb-8 sm:pb-10 overflow-hidden hero-gradient">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-10 sm:gap-16 items-end">
+            <div class="text-center lg:text-left">
+                <span class="text-brand-500 font-semibold tracking-widest text-xs sm:text-sm uppercase mb-3 sm:mb-4 block">Solusi Mekanik Panggilan #1 Pontianak</span>
+                <h1 class="text-3xl sm:text-5xl md:text-7xl font-extrabold leading-[1.15] sm:leading-[1.1] mb-6 sm:mb-8">
+                    Mobil Bermasalah? <br><span class="text-brand-500">Kami Meluncur.</span>
+                </h1>
+                <p class="text-slate-400 text-base sm:text-lg mb-8 sm:mb-10 leading-relaxed max-w-lg mx-auto lg:mx-0">
+                    Menghubungkan Anda dengan mekanik terpercaya di Pontianak untuk perawatan dan perbaikan mobil. Cepat, Mudah, dan Terpercaya.
+                </p>
+                <div class="flex flex-col sm:flex-row flex-wrap justify-center lg:justify-start gap-3 sm:gap-4">
+                    <a href="https://wa.me/6285828417003?text=Halo%20Telpon%20Bengkel%2C%20saya%20ingin%20memesan%20layanan%20bengkel%20panggilan." target="_blank" rel="noopener noreferrer" class="bg-white text-black px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-base sm:text-lg hover:bg-slate-200 transition text-center">Panggil Mekanik</a>
+                    <a href="#layanan" class="border border-slate-700 px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-base sm:text-lg hover:bg-slate-800 transition text-center">Lihat Layanan</a>
+                </div>
+            </div>
+            <div class="relative">
+                <img src="images/flyer.jpg" alt="Mekanik Telpon Bengkel sedang memperbaiki mobil" class="relative z-10 w-full h-auto rounded-2xl sm:rounded-3xl">
+            </div>
+        </div>
+    </header>
+
+    <div class="marquee-wrap marquee-mask relative w-full overflow-hidden bg-slate-900/60 border-y border-slate-800 py-4">
+        <div class="marquee-track flex w-max items-center gap-10 whitespace-nowrap">
+            <span class="flex items-center gap-2 text-slate-400 text-sm font-semibold px-4"><i class="fa-solid fa-star text-yellow-400"></i> Rating 4.7 </span>
+            <span class="flex items-center gap-2 text-slate-400 text-sm font-semibold px-4"><i class="fa-solid fa-clock text-brand-500"></i> Buka 24 Jam Setiap Hari</span>
+            <span class="flex items-center gap-2 text-slate-400 text-sm font-semibold px-4"><i class="fa-solid fa-bolt text-brand-500"></i> Respon Cepat Bengkel Panggilan</span>
+            <span class="flex items-center gap-2 text-slate-400 text-sm font-semibold px-4"><i class="fa-solid fa-shield-halved text-brand-500"></i> Mekanik Berpengalaman & Terpercaya</span>
+            <span class="flex items-center gap-2 text-slate-400 text-sm font-semibold px-4"><i class="fa-solid fa-location-dot text-brand-500"></i> Melayani Pontianak & Sekitarnya</span>
+            <span class="flex items-center gap-2 text-slate-400 text-sm font-semibold px-4"><i class="fa-solid fa-star text-yellow-400"></i> Rating 4.7 </span>
+            <span class="flex items-center gap-2 text-slate-400 text-sm font-semibold px-4"><i class="fa-solid fa-clock text-brand-500"></i> Buka 24 Jam Setiap Hari</span>
+            <span class="flex items-center gap-2 text-slate-400 text-sm font-semibold px-4"><i class="fa-solid fa-bolt text-brand-500"></i> Respon Cepat Bengkel Panggilan</span>
+            <span class="flex items-center gap-2 text-slate-400 text-sm font-semibold px-4"><i class="fa-solid fa-shield-halved text-brand-500"></i> Mekanik Berpengalaman & Terpercaya</span>
+            <span class="flex items-center gap-2 text-slate-400 text-sm font-semibold px-4"><i class="fa-solid fa-location-dot text-brand-500"></i> Melayani Pontianak & Sekitarnya</span>
+        </div>
+    </div>
+
+    <section id="tentang" class="pt-8 sm:pt-10 pb-16 sm:pb-24 bg-slate-900/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+            <div class="grid md:grid-cols-2 gap-10 sm:gap-16 items-center">
+                <div>
+                    <h2 class="text-2xl sm:text-4xl font-bold mb-4 sm:mb-6 text-center md:text-left">Sejak 2022, <span class="text-brand-500">Solusi Andalan Anda.</span></h2>
+                    <p class="text-slate-400 text-sm sm:text-base leading-relaxed mb-6 text-center md:text-left">
+                        Berdiri 18 Februari 2022, Telpon Bengkel lahir sebagai penghubung antara pemilik mobil yang membutuhkan pertolongan dengan teknisi ahli. Kami paham, mobil mogok adalah hal yang mengganggu ritme hidup Anda.
+                    </p>
+                    <div class="space-y-3 sm:space-y-4">
+                        <div class="flex gap-4 p-4 rounded-xl bg-slate-800">
+                            <i class="fa-solid fa-check-double text-brand-500 mt-1"></i>
+                            <div><h4 class="font-bold">Akses Mudah</h4><p class="text-xs text-slate-400">Hubungi kami, kami segera datang.</p></div>
+                        </div>
+                        <div class="flex gap-4 p-4 rounded-xl bg-slate-800">
+                            <i class="fa-solid fa-user-tie text-brand-500 mt-1"></i>
+                            <div><h4 class="font-bold">Mekanik Berpengalaman</h4><p class="text-xs text-slate-400">Teknisi pilihan dan terpercaya.</p></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-700 shadow-xl">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-6 sm:mb-8">Mengapa Telpon Bengkel?</h3>
+                    <ul class="space-y-4 sm:space-y-6">
+                        <li class="flex gap-4 text-sm sm:text-base text-slate-300"><i class="fa-solid fa-circle-xmark text-red-500 mt-1"></i> <span>Sulit mencari mekanik terpercaya? Kami solusinya.</span></li>
+                        <li class="flex gap-4 text-sm sm:text-base text-slate-300"><i class="fa-solid fa-road text-brand-500 mt-1"></i> <span>Mobil bermasalah di tengah perjalanan.</span></li>
+                        <li class="flex gap-4 text-sm sm:text-base text-slate-300"><i class="fa-solid fa-magnifying-glass text-brand-500 mt-1"></i> <span>Tidak tahu harus membawa kendaraan ke mana.</span></li>
+                        <li class="flex gap-4 text-sm sm:text-base text-slate-300"><i class="fa-solid fa-bolt text-brand-500 mt-1"></i> <span>Bantuan teknis yang cepat dan tepat.</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="layanan" class="py-16 sm:py-24">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 text-center">
+            <h2 class="text-2xl sm:text-4xl font-bold mb-3 sm:mb-4">Layanan <span class="text-brand-500">Unggulan</span></h2>
+            <p class="text-slate-400 text-sm sm:text-base mb-10 sm:mb-16">Klik salah satu kartu untuk melihat detail layanan.</p>
+            <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
+                <button type="button" onclick="openServiceModal('bengkel-panggilan')" class="text-left p-4 sm:p-8 rounded-2xl sm:rounded-3xl bg-slate-800 border border-slate-700 hover:border-brand-500 active:scale-95 hover:-translate-y-1 transition group cursor-pointer">
+                    <i class="fa-solid fa-wrench text-2xl sm:text-3xl mb-3 sm:mb-6 text-brand-500"></i>
+                    <h4 class="font-bold text-sm sm:text-lg mb-1 sm:mb-2">Bengkel Panggilan</h4>
+                    <p class="text-xs sm:text-sm text-slate-400">Servis langsung di lokasi Anda.</p>
+                    <span class="hidden sm:inline-block mt-4 text-xs font-semibold text-brand-500">Lihat Detail <i class="fa-solid fa-arrow-right ml-1"></i></span>
+                </button>
+                <button type="button" onclick="openServiceModal('emergency')" class="text-left p-4 sm:p-8 rounded-2xl sm:rounded-3xl bg-slate-800 border border-slate-700 hover:border-brand-500 active:scale-95 hover:-translate-y-1 transition group cursor-pointer">
+                    <i class="fa-solid fa-truck-medical text-2xl sm:text-3xl mb-3 sm:mb-6 text-red-500"></i>
+                    <h4 class="font-bold text-sm sm:text-lg mb-1 sm:mb-2">Emergency Service</h4>
+                    <p class="text-xs sm:text-sm text-slate-400">Bantuan mendadak di jalan.</p>
+                    <span class="hidden sm:inline-block mt-4 text-xs font-semibold text-brand-500">Lihat Detail <i class="fa-solid fa-arrow-right ml-1"></i></span>
+                </button>
+                <button type="button" onclick="openServiceModal('inspeksi')" class="text-left p-4 sm:p-8 rounded-2xl sm:rounded-3xl bg-slate-800 border border-slate-700 hover:border-brand-500 active:scale-95 hover:-translate-y-1 transition group cursor-pointer">
+                    <i class="fa-solid fa-magnifying-glass-chart text-2xl sm:text-3xl mb-3 sm:mb-6 text-blue-500"></i>
+                    <h4 class="font-bold text-sm sm:text-lg mb-1 sm:mb-2">Inspeksi</h4>
+                    <p class="text-xs sm:text-sm text-slate-400">Cek kesehatan kendaraan detail.</p>
+                    <span class="hidden sm:inline-block mt-4 text-xs font-semibold text-brand-500">Lihat Detail <i class="fa-solid fa-arrow-right ml-1"></i></span>
+                </button>
+                <button type="button" onclick="openServiceModal('perawatan-rutin')" class="text-left p-4 sm:p-8 rounded-2xl sm:rounded-3xl bg-slate-800 border border-slate-700 hover:border-brand-500 active:scale-95 hover:-translate-y-1 transition group cursor-pointer">
+                    <i class="fa-solid fa-oil-can text-2xl sm:text-3xl mb-3 sm:mb-6 text-yellow-500"></i>
+                    <h4 class="font-bold text-sm sm:text-lg mb-1 sm:mb-2">Perawatan Rutin</h4>
+                    <p class="text-xs sm:text-sm text-slate-400">Jaga performa tetap prima.</p>
+                    <span class="hidden sm:inline-block mt-4 text-xs font-semibold text-brand-500">Lihat Detail <i class="fa-solid fa-arrow-right ml-1"></i></span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Service Detail Modal -->
+    <div id="service-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
+        <div id="service-modal-backdrop" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+        <div class="relative bg-slate-800 border border-slate-700 rounded-3xl max-w-lg w-full max-h-[85vh] overflow-y-auto p-6 sm:p-8 shadow-2xl transform transition-all duration-300 scale-95 opacity-0" id="service-modal-panel">
+            <button onclick="closeServiceModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-xmark text-2xl"></i>
+            </button>
+            <div id="service-modal-icon" class="text-4xl mb-6"></div>
+            <h3 id="service-modal-title" class="text-2xl font-bold mb-3"></h3>
+            <p id="service-modal-desc" class="text-slate-400 mb-6 leading-relaxed"></p>
+            <ul id="service-modal-list" class="space-y-3 mb-8"></ul>
+            <a href="#" id="service-modal-cta" target="_blank" rel="noopener noreferrer" class="block text-center bg-brand-500 hover:bg-brand-600 text-white px-6 py-3 rounded-xl font-bold transition">
+                Pesan Layanan Ini
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const serviceData = {
+            'bengkel-panggilan': {
+                icon: '<i class="fa-solid fa-wrench text-brand-500"></i>',
+                title: 'Bengkel Panggilan',
+                desc: 'Mekanik profesional kami datang langsung ke lokasi Anda, di rumah, kantor, atau di mana pun mobil Anda mogok. Tidak perlu repot menyeret mobil ke bengkel.',
+                items: [
+                    'Perbaikan aki, starter, dan kelistrikan ringan',
+                    'Ganti ban dan penanganan ban bocor',
+                    'Diagnosa awal masalah mesin di tempat',
+                    'Estimasi biaya transparan sebelum pengerjaan'
+                ]
+            },
+            'emergency': {
+                icon: '<i class="fa-solid fa-truck-medical text-red-500"></i>',
+                title: 'Emergency Service',
+                desc: 'Layanan tanggap darurat untuk kondisi mobil mogok mendadak di jalan, siang maupun malam. Tim kami siap merespons cepat agar perjalanan Anda tidak terganggu lama.',
+                items: [
+                    'Respon cepat 24/7 termasuk hari libur',
+                    'Bantuan jump-start aki di lokasi',
+                    'Derek darurat jika perbaikan tidak bisa di tempat',
+                    'Koordinasi langsung via WhatsApp/telepon'
+                ]
+            },
+            'inspeksi': {
+                icon: '<i class="fa-solid fa-magnifying-glass-chart text-blue-500"></i>',
+                title: 'Inspeksi Kendaraan',
+                desc: 'Pemeriksaan menyeluruh kondisi kendaraan Anda untuk mendeteksi masalah sejak dini, cocok sebelum perjalanan jauh atau saat membeli mobil bekas.',
+                items: [
+                    'Cek mesin, rem, suspensi, dan kelistrikan',
+                    'Pemeriksaan oli, cairan, dan filter',
+                    'Laporan kondisi kendaraan secara detail',
+                    'Rekomendasi perbaikan sesuai prioritas'
+                ]
+            },
+            'perawatan-rutin': {
+                icon: '<i class="fa-solid fa-oil-can text-yellow-500"></i>',
+                title: 'Perawatan Rutin',
+                desc: 'Jaga performa mobil tetap prima dengan perawatan berkala yang dilakukan langsung di lokasi Anda, praktis tanpa perlu antre di bengkel.',
+                items: [
+                    'Ganti oli mesin dan filter oli',
+                    'Pengecekan tekanan ban dan rotasi ban',
+                    'Pembersihan filter udara dan aki',
+                    'Jadwal servis berkala yang bisa diatur ulang'
+                ]
+            }
+        };
+
+        function openServiceModal(key) {
+            const data = serviceData[key];
+            if (!data) return;
+
+            document.getElementById('service-modal-icon').innerHTML = data.icon;
+            document.getElementById('service-modal-title').textContent = data.title;
+            document.getElementById('service-modal-desc').textContent = data.desc;
+
+            const waMessage = encodeURIComponent('Halo Telpon Bengkel, saya ingin memesan layanan "' + data.title + '".');
+            document.getElementById('service-modal-cta').href = 'https://wa.me/6285828417003?text=' + waMessage;
+
+            const list = document.getElementById('service-modal-list');
+            list.innerHTML = '';
+            data.items.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'flex gap-3 text-sm text-slate-300';
+                li.innerHTML = '<i class="fa-solid fa-check text-brand-500 mt-1"></i><span>' + item + '</span>';
+                list.appendChild(li);
+            });
+
+            const modal = document.getElementById('service-modal');
+            const panel = document.getElementById('service-modal-panel');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+            requestAnimationFrame(() => {
+                panel.classList.remove('scale-95', 'opacity-0');
+                panel.classList.add('scale-100', 'opacity-100');
+            });
+        }
+
+        function closeServiceModal() {
+            const modal = document.getElementById('service-modal');
+            const panel = document.getElementById('service-modal-panel');
+            panel.classList.remove('scale-100', 'opacity-100');
+            panel.classList.add('scale-95', 'opacity-0');
+            document.body.style.overflow = '';
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 200);
+        }
+
+        document.getElementById('service-modal-backdrop').addEventListener('click', closeServiceModal);
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeServiceModal();
+        });
+    </script>
+
+
+    <section id="filosofi" class="py-16 sm:py-24 bg-slate-900 border-y border-slate-800">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 text-center">
+            <h2 class="text-2xl sm:text-4xl font-bold mb-8 sm:mb-12">Filosofi & Visi</h2>
+            <div class="grid sm:grid-cols-2 gap-4 sm:gap-8 text-left mb-10 sm:mb-16">
+                <div class="p-5 sm:p-6 bg-slate-800/50 rounded-2xl">
+                    <h4 class="font-bold mb-2 text-sm sm:text-base">Mobil & Kap Terbuka</h4>
+                    <p class="text-xs sm:text-sm text-slate-400">Melambangkan kendaraan yang butuh uluran tangan kami.</p>
+                </div>
+                <div class="p-5 sm:p-6 bg-slate-800/50 rounded-2xl">
+                    <h4 class="font-bold mb-2 text-sm sm:text-base">Figur Mekanik</h4>
+                    <p class="text-xs sm:text-sm text-slate-400">Kesiapan tenaga ahli dalam melayani.</p>
+                </div>
+                <div class="p-5 sm:p-6 bg-slate-800/50 rounded-2xl">
+                    <h4 class="font-bold mb-2 text-sm sm:text-base">Ikon Telepon</h4>
+                    <p class="text-xs sm:text-sm text-slate-400">Koneksi cepat antara Anda dan kami.</p>
+                </div>
+                <div class="p-5 sm:p-6 bg-slate-800/50 rounded-2xl">
+                    <h4 class="font-bold mb-2 text-sm sm:text-base">Makna 18.95</h4>
+                    <p class="text-xs sm:text-sm text-slate-400">Inspirasi QS. Al-Kahfi: 95, setiap kemampuan adalah anugerah Tuhan.</p>
+                </div>
+            </div>
+            <div class="p-5 sm:p-8 bg-brand-500/10 border border-brand-500/20 rounded-3xl">
+                <p class="text-base sm:text-xl italic">"Menjadi layanan bantuan kendaraan terpercaya yang memudahkan masyarakat Indonesia mendapatkan solusi otomotif dengan cepat dan profesional."</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="testimoni" class="py-16 sm:py-24">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6">
+            <div class="text-center mb-10 sm:mb-14">
+                <h2 class="text-2xl sm:text-4xl font-bold mb-3 sm:mb-4">Kata <span class="text-brand-500">Pelanggan Kami</span></h2>
+                <a href="https://www.openstreetmap.org/directions?from=&to=-0.0305%2C109.330" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-slate-800 border border-slate-700 hover:border-brand-500 transition rounded-full px-5 py-2.5">
+                    <span class="text-yellow-400 tracking-tight text-sm sm:text-base">★★★★★</span>
+                    <span class="font-bold text-sm sm:text-base">4.7</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-slate-500 text-xs ml-1"></i>
+                </a>
+            </div>
+            <div class="grid md:grid-cols-3 gap-5 sm:gap-6">
+                <div class="p-6 sm:p-7 bg-slate-800 border border-slate-700 rounded-2xl sm:rounded-3xl">
+                    <div class="text-yellow-400 mb-3 text-sm">★★★★★</div>
+                    <p class="text-slate-300 text-sm sm:text-base leading-relaxed mb-5">"Responya cepat, mekaniknya datang langsung ke lokasi. Mobil saya mogok malam-malam dan langsung dibantu. Sangat membantu!"</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-500 font-bold text-sm">A</div>
+                        <div>
+                            <p class="font-bold text-sm">Ahmad</p>
+                            <p class="text-slate-500 text-xs">Pelanggan</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6 sm:p-7 bg-slate-800 border border-slate-700 rounded-2xl sm:rounded-3xl">
+                    <div class="text-yellow-400 mb-3 text-sm">★★★★★</div>
+                    <p class="text-slate-300 text-sm sm:text-base leading-relaxed mb-5">"Mekaniknya profesional dan ramah, harganya juga transparan sebelum dikerjakan. Recommended buat yang butuh bengkel panggilan."</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-500 font-bold text-sm">S</div>
+                        <div>
+                            <p class="font-bold text-sm">Siti</p>
+                            <p class="text-slate-500 text-xs">Pelanggan</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6 sm:p-7 bg-slate-800 border border-slate-700 rounded-2xl sm:rounded-3xl">
+                    <div class="text-yellow-400 mb-3 text-sm">★★★★★</div>
+                    <p class="text-slate-300 text-sm sm:text-base leading-relaxed mb-5">"Buka 24 jam beneran, jam 2 pagi masih diangkat teleponnya. Terima kasih Telpon Bengkel sudah jadi penyelamat perjalanan saya."</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-500 font-bold text-sm">R</div>
+                        <div>
+                            <p class="font-bold text-sm">Rudi</p>
+                            <p class="text-slate-500 text-xs">Pelanggan</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="lokasi" class="py-16 sm:py-24 bg-slate-900/50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6">
+            <div class="text-center mb-10 sm:mb-14">
+                <h2 class="text-2xl sm:text-4xl font-bold mb-3 sm:mb-4">Lokasi <span class="text-brand-500">Kami</span></h2>
+                <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto">Kunjungi bengkel kami atau hubungi langsung untuk layanan panggilan ke lokasi Anda.</p>
+            </div>
+            <div class="grid lg:grid-cols-5 gap-6 sm:gap-8 items-stretch">
+                <div class="lg:col-span-3 rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-700 shadow-xl h-72 sm:h-96 lg:h-auto">
+                    <div id="map" class="w-full h-full"></div>
+                </div>
+                <div class="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-2xl sm:rounded-3xl p-6 sm:p-8 flex flex-col justify-center">
+                    <div class="flex gap-4 mb-6">
+                        <i class="fa-solid fa-location-dot text-brand-500 text-xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold mb-1 text-sm sm:text-base">Alamat</h4>
+                            <p class="text-slate-400 text-sm">Jl. Kesehatan, Jalur C Jalur 1 No.28C, Kota Baru, Kec. Pontianak Sel., Kota Pontianak, Kalimantan Barat 78121</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 mb-6">
+                        <i class="fa-solid fa-clock text-brand-500 text-xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold mb-1 text-sm sm:text-base">Jam Operasional</h4>
+                            <p class="text-slate-400 text-sm">Buka 24 Jam, Setiap Hari</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 mb-8">
+                        <i class="fa-solid fa-phone text-brand-500 text-xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold mb-1 text-sm sm:text-base">Telepon</h4>
+                            <p class="text-slate-400 text-sm">+62 858-2841-7003</p>
+                        </div>
+                    </div>
+                    <a href="https://www.openstreetmap.org/directions?from=&to=-0.0305%2C109.330" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white px-6 py-3.5 rounded-xl font-bold text-sm sm:text-base transition">
+                        <i class="fa-solid fa-diamond-turn-right"></i> Buka di OpenStreetMap
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="faq" class="py-16 sm:py-24 bg-slate-900/50">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6">
+            <div class="text-center mb-10 sm:mb-14">
+                <h2 class="text-2xl sm:text-4xl font-bold mb-3 sm:mb-4">Pertanyaan <span class="text-brand-500">Umum</span></h2>
+                <p class="text-slate-400 text-sm sm:text-base">Hal-hal yang sering ditanyakan seputar layanan Telpon Bengkel.</p>
+            </div>
+            <div class="space-y-3">
+                <div class="faq-item border border-slate-700 rounded-2xl bg-slate-800/50 overflow-hidden">
+                    <button type="button" onclick="toggleFaq(this)" class="faq-question w-full flex items-center justify-between gap-4 text-left px-5 sm:px-6 py-4 sm:py-5">
+                        <span class="font-semibold text-sm sm:text-base">Berapa lama mekanik datang setelah saya telepon?</span>
+                        <span class="faq-icon flex-shrink-0 w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-brand-500 text-lg">+</span>
+                    </button>
+                    <div class="faq-answer px-5 sm:px-6">
+                        <p class="text-slate-400 text-sm sm:text-base pb-4 sm:pb-5 leading-relaxed">Waktu tempuh tergantung lokasi Anda, namun tim kami akan segera meluncur begitu pesanan dikonfirmasi. Karena kami buka 24 jam, respon cepat siang maupun malam.</p>
+                    </div>
+                </div>
+                <div class="faq-item border border-slate-700 rounded-2xl bg-slate-800/50 overflow-hidden">
+                    <button type="button" onclick="toggleFaq(this)" class="faq-question w-full flex items-center justify-between gap-4 text-left px-5 sm:px-6 py-4 sm:py-5">
+                        <span class="font-semibold text-sm sm:text-base">Apakah Telpon Bengkel buka 24 jam penuh?</span>
+                        <span class="faq-icon flex-shrink-0 w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-brand-500 text-lg">+</span>
+                    </button>
+                    <div class="faq-answer px-5 sm:px-6">
+                        <p class="text-slate-400 text-sm sm:text-base pb-4 sm:pb-5 leading-relaxed">Ya, benar. Telpon Bengkel siap melayani Anda 24 jam setiap hari, termasuk akhir pekan dan hari libur, karena kami paham mobil bisa bermasalah kapan saja.</p>
+                    </div>
+                </div>
+                <div class="faq-item border border-slate-700 rounded-2xl bg-slate-800/50 overflow-hidden">
+                    <button type="button" onclick="toggleFaq(this)" class="faq-question w-full flex items-center justify-between gap-4 text-left px-5 sm:px-6 py-4 sm:py-5">
+                        <span class="font-semibold text-sm sm:text-base">Bagaimana cara mengetahui estimasi biaya sebelum servis?</span>
+                        <span class="faq-icon flex-shrink-0 w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-brand-500 text-lg">+</span>
+                    </button>
+                    <div class="faq-answer px-5 sm:px-6">
+                        <p class="text-slate-400 text-sm sm:text-base pb-4 sm:pb-5 leading-relaxed">Mekanik kami akan memberikan estimasi biaya secara transparan setelah melakukan diagnosa awal di lokasi, sebelum pekerjaan perbaikan dimulai. Tidak ada biaya tersembunyi.</p>
+                    </div>
+                </div>
+                <div class="faq-item border border-slate-700 rounded-2xl bg-slate-800/50 overflow-hidden">
+                    <button type="button" onclick="toggleFaq(this)" class="faq-question w-full flex items-center justify-between gap-4 text-left px-5 sm:px-6 py-4 sm:py-5">
+                        <span class="font-semibold text-sm sm:text-base">Wilayah mana saja yang dilayani Telpon Bengkel?</span>
+                        <span class="faq-icon flex-shrink-0 w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-brand-500 text-lg">+</span>
+                    </button>
+                    <div class="faq-answer px-5 sm:px-6">
+                        <p class="text-slate-400 text-sm sm:text-base pb-4 sm:pb-5 leading-relaxed">Kami melayani area Pontianak dan sekitarnya. Untuk memastikan lokasi Anda dapat dijangkau, silakan hubungi kami langsung via WhatsApp atau telepon.</p>
+                    </div>
+                </div>
+                <div class="faq-item border border-slate-700 rounded-2xl bg-slate-800/50 overflow-hidden">
+                    <button type="button" onclick="toggleFaq(this)" class="faq-question w-full flex items-center justify-between gap-4 text-left px-5 sm:px-6 py-4 sm:py-5">
+                        <span class="font-semibold text-sm sm:text-base">Apa saja layanan yang tersedia?</span>
+                        <span class="faq-icon flex-shrink-0 w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center text-brand-500 text-lg">+</span>
+                    </button>
+                    <div class="faq-answer px-5 sm:px-6">
+                        <p class="text-slate-400 text-sm sm:text-base pb-4 sm:pb-5 leading-relaxed">Kami menyediakan Bengkel Panggilan, Emergency Service, Inspeksi Kendaraan, dan Perawatan Rutin. Lihat detail lengkapnya di bagian "Layanan Unggulan" di atas.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        function toggleFaq(button) {
+            const item = button.closest('.faq-item');
+            const wasOpen = item.classList.contains('open');
+            document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
+            if (!wasOpen) {
+                item.classList.add('open');
+            }
+        }
+    </script>
+
+    <footer id="hubungi" class="py-16 sm:py-24 px-4 text-center">
+        <h2 class="text-3xl sm:text-5xl font-bold mb-6 sm:mb-8">Mobil Bermasalah? Jangan Bingung.</h2>
+        <p class="text-slate-400 text-sm sm:text-base mb-8 sm:mb-12">Simpan nomor Telpon Bengkel. Kami adalah teman perjalanan Anda.</p>
+        <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
+            <a href="https://wa.me/6285828417003?text=Halo%20Telpon%20Bengkel%2C%20saya%20ingin%20memesan%20layanan%20bengkel%20panggilan." target="_blank" rel="noopener noreferrer" class="bg-brand-500 hover:bg-brand-600 text-white px-8 sm:px-10 py-3.5 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg shadow-brand-500/20">
+                <i class="fa-brands fa-whatsapp mr-2"></i> Chat WhatsApp
+            </a>
+            <a href="tel:+6285828417003" class="bg-white text-black hover:bg-slate-200 px-8 sm:px-10 py-3.5 sm:py-4 rounded-xl font-bold text-base sm:text-lg">
+                <i class="fa-solid fa-phone mr-2"></i> Panggil Sekarang
+            </a>
+        </div>
+
+        <div class="flex justify-center gap-4 sm:gap-6 mt-12 sm:mt-16">
+            <a href="https://www.instagram.com/telponbengkel/?hl=en" target="_blank" rel="noopener noreferrer" aria-label="Instagram Telpon Bengkel" class="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-brand-500 hover:border-brand-500 transition text-lg sm:text-xl">
+                <i class="fa-brands fa-instagram"></i>
+            </a>
+            <a href="https://www.facebook.com/Telponbengkel" target="_blank" rel="noopener noreferrer" aria-label="Facebook Telpon Bengkel" class="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-brand-500 hover:border-brand-500 transition text-lg sm:text-xl">
+                <i class="fa-brands fa-facebook"></i>
+            </a>
+            <a href="https://www.tiktok.com/@telponbengkelindonesia" target="_blank" rel="noopener noreferrer" aria-label="TikTok Telpon Bengkel" class="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-brand-500 hover:border-brand-500 transition text-lg sm:text-xl">
+                <i class="fa-brands fa-tiktok"></i>
+            </a>
+        </div>
+
+        <p class="mt-10 sm:mt-12 text-slate-600 text-xs sm:text-sm">&copy; 2026 Telpon Bengkel Pontianak. All Rights Reserved.</p>
+    </footer>
+
+<script>
+    // ── Splash Screen: hide after animation completes ──
+    (function() {
+        var splash = document.getElementById('splash');
+        if (!splash) return;
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                splash.classList.add('fade-out');
+                setTimeout(function() {
+                    if (splash.parentNode) splash.parentNode.removeChild(splash);
+                }, 700);
+            }, 2400);
+        });
+    })();
+</script>
+
+<script>
+    // ── OpenStreetMap via Leaflet ──
+    (function() {
+        var mapEl = document.getElementById('map');
+        if (!mapEl) return;
+        var map = L.map('map', {
+            attributionControl: true,
+            zoomControl: true
+        }).setView([-0.0305, 109.330], 16);
+
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 19
+        }).addTo(map);
+
+        var marker = L.marker([-0.0305, 109.330]).addTo(map);
+        marker.bindPopup('<b>Telpon Bengkel</b><br>Jl. Kesehatan Jalur C No.28C, Pontianak').openPopup();
+    })();
+</script>
+
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a14aeeb03db75d0f',t:'MTc4Mjk2NjgwNw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
